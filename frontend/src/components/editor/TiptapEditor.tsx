@@ -132,6 +132,7 @@ const MenuBar = ({ editor }: { editor: any }) => {
 
 export default function TiptapEditor({ content, onChange }: TiptapEditorProps) {
   const editor = useEditor({
+    immediatelyRender: false,
     extensions: [
       StarterKit,
       Image,
