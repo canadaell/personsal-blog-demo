@@ -10,7 +10,7 @@ const categories = [
   { name: "Projects", path: "/projects" },
   { name: "Tech Notes", path: "/tech-notes" },
   { name: "CV", path: "/cv" },
-  { name: "Photography", path: "/photography" },
+  { name: "PLOG", path: "/plog" },
   { name: "About me", path: "/about-me" },
 ];
 
