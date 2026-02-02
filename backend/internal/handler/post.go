@@ -41,8 +41,9 @@ func (h *PostHandler) List(c *gin.Context) {
 	// Simple query params parsing (could be improved)
 	// For now, use defaults
 	typeFilter := c.Query("type")
+	subTypeFilter := c.Query("sub_type")
 
-	posts, total, err := h.postService.ListPublishedPosts(page, pageSize, typeFilter)
+	posts, total, err := h.postService.ListPublishedPosts(page, pageSize, typeFilter, subTypeFilter)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch posts"})
 		return

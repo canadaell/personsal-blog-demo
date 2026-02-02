@@ -47,7 +47,7 @@ func (s *PostService) CreatePost(req model.CreatePostRequest) (*model.Post, erro
 	return &post, nil
 }
 
-func (s *PostService) ListPublishedPosts(page, pageSize int, typeFilter string) ([]model.Post, int64, error) {
+func (s *PostService) ListPublishedPosts(page, pageSize int, typeFilter, subTypeFilter string) ([]model.Post, int64, error) {
 	var posts []model.Post
 	var total int64
 
@@ -56,6 +56,9 @@ func (s *PostService) ListPublishedPosts(page, pageSize int, typeFilter string) 
 
 	if typeFilter != "" {
 		query = query.Where("type = ?", typeFilter)
+	}
+	if subTypeFilter != "" {
+		query = query.Where("sub_type = ?", subTypeFilter)
 	}
 
 	// Count total for pagination meta
