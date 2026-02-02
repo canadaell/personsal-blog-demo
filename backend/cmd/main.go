@@ -67,6 +67,8 @@ func main() {
 		})
 
 		adminGroup.POST("/posts", postHandler.Create)
+		adminGroup.GET("/posts", postHandler.AdminList)
+		adminGroup.GET("/stats", postHandler.GetStats)
 	}
 
 	// Start Server

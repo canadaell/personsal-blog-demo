@@ -33,3 +33,9 @@ type CreatePostRequest struct {
 	Meta       map[string]interface{} `json:"meta"`
 	Status     string                 `json:"status"` // 'draft' or 'published'
 }
+
+type DashboardStats struct {
+	Total     int64 `json:"total"`
+	Published int64 `json:"published"`
+	Draft     int64 `json:"draft"`
+}

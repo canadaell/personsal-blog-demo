@@ -1,48 +1,87 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
-// Mock data shared with the homepage (ideally fetched from backend)
-const initialPosts = [
-  {
-    id: 1,
-    title: "Bartender 的替代品",
-    category: "分享热爱",
-    date: "2026/01/30",
-    status: "Published",
-  },
-  {
-    id: 2,
-    title: "在 AI 浪潮中迷失的 Setapp",
-    category: "杂文随笔",
-    date: "2026/01/26",
-    status: "Published",
-  },
-  {
-    id: 3,
-    title: "再谈 iA Writer",
-    category: "分享热爱",
-    date: "2026/01/25",
-    status: "Draft",
-  },
-  {
-    id: 4,
-    title: "Plog 5 生活中的一点橙",
-    category: "分享热爱",
-    date: "2026/01/18",
-    status: "Published",
-  },
-];
+// Define Types
+interface Post {
+  id: string; // UUID
+  title: string;
+  type: string;
+  sub_type?: string;
+  status: string;
+  published_at?: string;
+  created_at: string;
+}
+
+interface DashboardStats {
+  total: number;
+  published: number;
+  draft: number;
+}
 
 export default function AdminDashboard() {
-  const [posts, setPosts] = useState(initialPosts);
+  const router = useRouter();
+  const [posts, setPosts] = useState<Post[]>([]);
+  const [stats, setStats] = useState<DashboardStats>({ total: 0, published: 0, draft: 0 });
+  const [loading, setLoading] = useState(true);
 
-  const handleDelete = (id: number) => {
-    if (confirm("Are you sure you want to delete this post?")) {
-      setPosts(posts.filter((post) => post.id !== id));
+  // Helper to format date
+  const formatDate = (isoString?: string) => {
+    if (!isoString) return "-";
+    return new Date(isoString).toLocaleDateString("zh-CN");
+  };
+
+  useEffect(() => {
+    const fetchData = async () => {
+      // Get Token
+      const token = document.cookie
+        .split("; ")
+        .find((row) => row.startsWith("token="))
+        ?.split("=")[1];
+
+      if (!token) {
+        router.push("/login");
+        return;
+      }
+
+      try {
+        const headers = { Authorization: `Bearer ${token}` };
+
+        // 1. Fetch Stats
+        const statsRes = await fetch("http://localhost:8080/admin/stats", { headers });
+        if (statsRes.ok) {
+          setStats(await statsRes.json());
+        }
+
+        // 2. Fetch Posts
+        const postsRes = await fetch("http://localhost:8080/admin/posts", { headers });
+        if (postsRes.ok) {
+          const json = await postsRes.json();
+          setPosts(json.data || []);
+        }
+
+      } catch (error) {
+        console.error("Failed to fetch admin data", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [router]);
+
+  const handleDelete = (id: string) => {
+    if (confirm("Delete functionality not fully implemented yet. Are you sure?")) {
+      // TODO: Implement delete API call using token
+      alert("Delete API pending...");
     }
   };
+
+  if (loading) {
+    return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
+  }
 
   return (
     <div className="min-h-screen bg-[#faf6f1] text-gray-900 font-sans">
@@ -67,18 +106,18 @@ export default function AdminDashboard() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
           <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
             <h3 className="text-sm font-medium text-gray-500">Total Posts</h3>
-            <p className="text-3xl font-bold mt-2">{posts.length}</p>
+            <p className="text-3xl font-bold mt-2">{stats.total}</p>
           </div>
           <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
             <h3 className="text-sm font-medium text-gray-500">Published</h3>
-            <p className="text-3xl font-bold mt-2">
-              {posts.filter(p => p.status === 'Published').length}
+            <p className="text-3xl font-bold mt-2 text-green-600">
+              {stats.published}
             </p>
           </div>
           <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
             <h3 className="text-sm font-medium text-gray-500">Drafts</h3>
-            <p className="text-3xl font-bold mt-2">
-              {posts.filter(p => p.status === 'Draft').length}
+            <p className="text-3xl font-bold mt-2 text-yellow-600">
+              {stats.draft}
             </p>
           </div>
         </div>
@@ -86,7 +125,7 @@ export default function AdminDashboard() {
         {/* Posts Table */}
         <div className="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden">
           <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center">
-            <h2 className="font-semibold text-lg">Posts</h2>
+            <h2 className="font-semibold text-lg">Recent Posts</h2>
           </div>
           
           <div className="overflow-x-auto">
@@ -94,8 +133,8 @@ export default function AdminDashboard() {
               <thead className="bg-gray-50 text-gray-500 font-medium">
                 <tr>
                   <th className="px-6 py-3">Title</th>
-                  <th className="px-6 py-3">Category</th>
-                  <th className="px-6 py-3">Date</th>
+                  <th className="px-6 py-3">Type</th>
+                  <th className="px-6 py-3">Created Date</th>
                   <th className="px-6 py-3">Status</th>
                   <th className="px-6 py-3 text-right">Actions</th>
                 </tr>
@@ -104,19 +143,19 @@ export default function AdminDashboard() {
                 {posts.map((post) => (
                   <tr key={post.id} className="hover:bg-gray-50 transition-colors">
                     <td className="px-6 py-4 font-medium text-gray-900">
-                      {post.title}
+                      <Link href={`/posts/${post.id}`} className="hover:underline">
+                        {post.title}
+                      </Link>
                     </td>
-                    <td className="px-6 py-4 text-gray-500">
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                        {post.category}
-                      </span>
+                    <td className="px-6 py-4 text-gray-500 capitalize">
+                      {post.type} {post.sub_type ? `(${post.sub_type})` : ''}
                     </td>
                     <td className="px-6 py-4 text-gray-500 font-mono text-xs">
-                      {post.date}
+                      {formatDate(post.created_at)}
                     </td>
                     <td className="px-6 py-4">
                       <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                        post.status === 'Published' 
+                        post.status === 'published' 
                           ? 'bg-green-100 text-green-800' 
                           : 'bg-yellow-100 text-yellow-800'
                       }`}>
