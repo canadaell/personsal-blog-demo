@@ -47,12 +47,16 @@ func (s *PostService) CreatePost(req model.CreatePostRequest) (*model.Post, erro
 	return &post, nil
 }
 
-func (s *PostService) ListPublishedPosts(page, pageSize int) ([]model.Post, int64, error) {
+func (s *PostService) ListPublishedPosts(page, pageSize int, typeFilter string) ([]model.Post, int64, error) {
 	var posts []model.Post
 	var total int64
 
 	// Base query: only published posts
 	query := database.DB.Model(&model.Post{}).Where("status = ?", "published")
+
+	if typeFilter != "" {
+		query = query.Where("type = ?", typeFilter)
+	}
 
 	// Count total for pagination meta
 	if err := query.Count(&total).Error; err != nil {
