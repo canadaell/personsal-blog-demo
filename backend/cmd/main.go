@@ -68,6 +68,7 @@ func main() {
 
 		adminGroup.POST("/posts", postHandler.Create)
 		adminGroup.GET("/posts", postHandler.AdminList)
+		adminGroup.PUT("/posts/:id", postHandler.Update)
 		adminGroup.GET("/stats", postHandler.GetStats)
 	}
 

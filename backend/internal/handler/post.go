@@ -95,3 +95,20 @@ func (h *PostHandler) AdminList(c *gin.Context) {
 		},
 	})
 }
+
+func (h *PostHandler) Update(c *gin.Context) {
+	id := c.Param("id")
+	var req model.UpdatePostRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	post, err := h.postService.UpdatePost(id, req)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update post"})
+		return
+	}
+
+	c.JSON(http.StatusOK, post)
+}

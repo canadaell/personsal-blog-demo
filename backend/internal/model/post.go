@@ -39,3 +39,14 @@ type DashboardStats struct {
 	Published int64 `json:"published"`
 	Draft     int64 `json:"draft"`
 }
+
+type UpdatePostRequest struct {
+	Type       string                 `json:"type"`
+	SubType    string                 `json:"sub_type"`
+	Title      string                 `json:"title"`
+	Summary    string                 `json:"summary"`
+	CoverImage string                 `json:"cover_image"`
+	Content    map[string]interface{} `json:"content"`
+	Meta       map[string]interface{} `json:"meta"`
+	Status     string                 `json:"status"`
+}

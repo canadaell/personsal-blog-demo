@@ -118,3 +118,49 @@ func (s *PostService) ListAllPosts(page, pageSize int) ([]model.Post, int64, err
 
 	return posts, total, nil
 }
+
+func (s *PostService) UpdatePost(id string, req model.UpdatePostRequest) (*model.Post, error) {
+	var post model.Post
+	if err := database.DB.Where("id = ?", id).First(&post).Error; err != nil {
+		return nil, err
+	}
+
+	// Update fields
+	if req.Type != "" {
+		post.Type = req.Type
+	}
+
+	// We assume frontend sends all editable fields.
+	post.SubType = req.SubType
+
+	if req.Title != "" {
+		post.Title = req.Title
+	}
+
+	post.Summary = req.Summary
+	post.CoverImage = req.CoverImage
+
+	if req.Status != "" {
+		if req.Status == "published" && post.Status != "published" {
+			now := time.Now()
+			post.PublishedAt = &now
+		}
+		post.Status = req.Status
+	}
+
+	if req.Content != nil {
+		contentJSON, _ := json.Marshal(req.Content)
+		post.Content = datatypes.JSON(contentJSON)
+	}
+
+	if req.Meta != nil {
+		metaJSON, _ := json.Marshal(req.Meta)
+		post.Meta = datatypes.JSON(metaJSON)
+	}
+
+	if err := database.DB.Save(&post).Error; err != nil {
+		return nil, err
+	}
+
+	return &post, nil
+}

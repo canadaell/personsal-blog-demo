@@ -7,8 +7,8 @@ import Link from "@tiptap/extension-link";
 import Typography from "@tiptap/extension-typography";
 
 interface TiptapEditorProps {
-  content: string;
-  onChange: (content: string) => void;
+  content?: string | object;
+  onChange: (html: string) => void;
   onJsonChange?: (json: any) => void;
 }
 
