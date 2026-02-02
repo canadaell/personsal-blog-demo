@@ -1,25 +1,43 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import TiptapEditor from "@/components/editor/TiptapEditor";
 
-const categories = [
-  "分享热爱 (Sharing Love)",
-  "杂文随笔 (Essays)",
-  "技术笔记 (Tech Notes)",
-  "摄影 (Photography)",
+// Map UI Labels to DB Values
+const contentTypes = [
+  { label: "Article (文章)", value: "article" },
+  { label: "Plog (动态)", value: "plog" },
+  { label: "Project (项目)", value: "project" },
+];
+
+const articleSubTypes = [
+  { label: "Tech Notes (技术笔记)", value: "tech" },
+  { label: "Life (生活随笔)", value: "life" },
+  { label: "Other", value: "other" },
 ];
 
 export default function CreatePost() {
   const router = useRouter();
+  const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     title: "",
-    category: categories[0],
+    type: "article",
+    sub_type: "tech", 
     summary: "",
-    content: "<p>Start writing your amazing story...</p>", // Initial content for Tiptap
+    contentHtml: "<p></p>", // Just for editor preview
+    contentJson: {},        // Real data to send
+    status: "published",
   });
+
+  // Get token from cookie manually (simple way)
+  const getToken = () => {
+    return document.cookie
+      .split("; ")
+      .find((row) => row.startsWith("token="))
+      ?.split("=")[1];
+  };
 
   const handleChange = (
     e: React.ChangeEvent<
@@ -30,12 +48,50 @@ export default function CreatePost() {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Submitting post:", formData);
-    // Here you would typically call your API to save the post
-    alert("Post created successfully! (Mock)");
-    router.push("/admin");
+    setLoading(true);
+
+    const token = getToken();
+    if (!token) {
+      alert("No token found, please login again.");
+      router.push("/login");
+      return;
+    }
+
+    try {
+      const payload = {
+        title: formData.title,
+        type: formData.type,
+        sub_type: formData.type === "article" ? formData.sub_type : "", // Only article has subtype
+        summary: formData.summary,
+        status: formData.status,
+        content: formData.contentJson, // Send JSON structure
+        meta: {}, // Expand later if needed
+      };
+
+      const res = await fetch("http://localhost:8080/admin/posts", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(payload),
+      });
+
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error || "Failed to create post");
+      }
+
+      alert("Post created successfully!");
+      router.push("/admin");
+    } catch (error: any) {
+      console.error(error);
+      alert(`Error: ${error.message}`);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -59,7 +115,7 @@ export default function CreatePost() {
         <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-8">
           <form onSubmit={handleSubmit} className="space-y-6">
             
-            {/* 1. Title & Category Row */}
+            {/* 1. Title & Type Row */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div className="md:col-span-2 space-y-2">
                 <label htmlFor="title" className="block text-sm font-medium text-gray-700">
@@ -78,26 +134,66 @@ export default function CreatePost() {
               </div>
 
               <div className="space-y-2">
-                <label htmlFor="category" className="block text-sm font-medium text-gray-700">
-                  Category
+                <label htmlFor="type" className="block text-sm font-medium text-gray-700">
+                  Type (Category)
                 </label>
                 <select
-                  id="category"
-                  name="category"
-                  value={formData.category}
+                  id="type"
+                  name="type"
+                  value={formData.type}
                   onChange={handleChange}
                   className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-black focus:border-transparent outline-none transition-all bg-white"
                 >
-                  {categories.map((cat) => (
-                    <option key={cat} value={cat}>
-                      {cat}
+                  {contentTypes.map((type) => (
+                    <option key={type.value} value={type.value}>
+                      {type.label}
                     </option>
                   ))}
                 </select>
               </div>
             </div>
 
-            {/* 2. Summary (Tian Xie Content) */}
+            {/* 1.5 SubType (Only for Article) & Status */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {formData.type === "article" && (
+                <div className="space-y-2">
+                  <label htmlFor="sub_type" className="block text-sm font-medium text-gray-700">
+                    Sub Category
+                  </label>
+                  <select
+                    id="sub_type"
+                    name="sub_type"
+                    value={formData.sub_type}
+                    onChange={handleChange}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-black focus:border-transparent outline-none transition-all bg-white"
+                  >
+                    {articleSubTypes.map((sub) => (
+                      <option key={sub.value} value={sub.value}>
+                        {sub.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+              
+               <div className="space-y-2">
+                  <label htmlFor="status" className="block text-sm font-medium text-gray-700">
+                    Status
+                  </label>
+                  <select
+                    id="status"
+                    name="status"
+                    value={formData.status}
+                    onChange={handleChange}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-black focus:border-transparent outline-none transition-all bg-white"
+                  >
+                    <option value="draft">Draft</option>
+                    <option value="published">Published</option>
+                  </select>
+                </div>
+            </div>
+
+            {/* 2. Summary */}
             <div className="space-y-2">
               <label htmlFor="summary" className="block text-sm font-medium text-gray-700">
                 Summary / Excerpt
@@ -106,15 +202,11 @@ export default function CreatePost() {
                 id="summary"
                 name="summary"
                 rows={3}
-                required
                 value={formData.summary}
                 onChange={handleChange}
                 placeholder="Write a brief summary description..."
                 className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-black focus:border-transparent outline-none transition-all resize-none"
               />
-              <p className="text-xs text-gray-400 text-right">
-                {formData.summary.length} characters
-              </p>
             </div>
 
             {/* 3. Main Content (Tiptap Editor) */}
@@ -124,8 +216,9 @@ export default function CreatePost() {
               </label>
               
               <TiptapEditor 
-                content={formData.content} 
-                onChange={(html) => setFormData(prev => ({ ...prev, content: html }))} 
+                content={formData.contentHtml}
+                onChange={(html) => setFormData(prev => ({ ...prev, contentHtml: html }))}
+                onJsonChange={(json) => setFormData(prev => ({ ...prev, contentJson: json }))}
               />
             </div>
 
@@ -140,9 +233,10 @@ export default function CreatePost() {
               </button>
               <button
                 type="submit"
-                className="px-8 py-2 bg-black text-white text-sm font-bold rounded-md hover:bg-gray-800 transition-transform active:scale-95 shadow-md"
+                disabled={loading}
+                className="px-8 py-2 bg-black text-white text-sm font-bold rounded-md hover:bg-gray-800 transition-transform active:scale-95 shadow-md disabled:opacity-50"
               >
-                Publish Post
+                {loading ? "Publishing..." : "Publish Post"}
               </button>
             </div>
           </form>

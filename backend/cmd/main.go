@@ -3,6 +3,9 @@ package main
 import (
 	"github.com/canadaell/personsal-blog-demo/backend/internal/config"
 	"github.com/canadaell/personsal-blog-demo/backend/internal/database"
+	"github.com/canadaell/personsal-blog-demo/backend/internal/handler"
+	"github.com/canadaell/personsal-blog-demo/backend/internal/middleware"
+	"github.com/canadaell/personsal-blog-demo/backend/internal/service"
 	"github.com/gin-gonic/gin"
 )
 
@@ -16,13 +19,55 @@ func main() {
 	// 3. Initialize Router
 	r := gin.Default()
 
-	// Health Check Endpoint
+	// CORS Middleware (Temporary for dev, refine for prod)
+	r.Use(func(c *gin.Context) {
+		c.Writer.Header().Set("Access-Control-Allow-Origin", "*")
+		c.Writer.Header().Set("Access-Control-Allow-Credentials", "true")
+		c.Writer.Header().Set("Access-Control-Allow-Headers", "Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization, accept, origin, Cache-Control, X-Requested-With")
+		c.Writer.Header().Set("Access-Control-Allow-Methods", "POST, OPTIONS, GET, PUT, DELETE")
+
+		if c.Request.Method == "OPTIONS" {
+			c.AbortWithStatus(204)
+			return
+		}
+
+		c.Next()
+	})
+
+	// Initialize Services & Handlers
+	authService := service.NewAuthService()
+	authHandler := handler.NewAuthHandler(authService)
+
+	postService := service.NewPostService()
+	postHandler := handler.NewPostHandler(postService)
+
+	// Public Routes
 	r.GET("/ping", func(c *gin.Context) {
 		c.JSON(200, gin.H{
 			"message": "pong",
 			"status":  "ok",
 		})
 	})
+	r.POST("/login", authHandler.Login)
+	r.GET("/posts", postHandler.List)
+	r.GET("/posts/:id", postHandler.Get)
+
+	// Protected Admin Routes
+	adminGroup := r.Group("/admin")
+	adminGroup.Use(middleware.AuthMiddleware())
+	{
+		adminGroup.GET("/check", func(c *gin.Context) {
+			userID, _ := c.Get("userID")
+			role, _ := c.Get("role")
+			c.JSON(200, gin.H{
+				"message": "You are authorized",
+				"userId":  userID,
+				"role":    role,
+			})
+		})
+
+		adminGroup.POST("/posts", postHandler.Create)
+	}
 
 	// Start Server
 	r.Run(config.AppConfig.Server.Port)

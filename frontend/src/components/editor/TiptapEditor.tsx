@@ -9,6 +9,7 @@ import Typography from "@tiptap/extension-typography";
 interface TiptapEditorProps {
   content: string;
   onChange: (content: string) => void;
+  onJsonChange?: (json: any) => void;
 }
 
 const MenuBar = ({ editor }: { editor: any }) => {
@@ -130,7 +131,7 @@ const MenuBar = ({ editor }: { editor: any }) => {
   );
 };
 
-export default function TiptapEditor({ content, onChange }: TiptapEditorProps) {
+export default function TiptapEditor({ content, onChange, onJsonChange }: TiptapEditorProps) {
   const editor = useEditor({
     immediatelyRender: false,
     extensions: [
@@ -145,6 +146,9 @@ export default function TiptapEditor({ content, onChange }: TiptapEditorProps) {
     onUpdate: ({ editor }) => {
       // Return HTML content
       onChange(editor.getHTML());
+      if (onJsonChange) {
+        onJsonChange(editor.getJSON());
+      }
     },
     editorProps: {
       attributes: {

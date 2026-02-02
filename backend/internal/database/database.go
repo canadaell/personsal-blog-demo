@@ -15,8 +15,11 @@ var DB *gorm.DB
 
 func Connect() {
 	cfg := config.AppConfig.Database
-	dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=%s",
-		cfg.Host, cfg.User, cfg.Password, cfg.DBName, cfg.Port, cfg.SSLMode)
+	dsn := fmt.Sprintf("host='%s' user='%s' dbname='%s' port='%s' sslmode='%s'",
+		cfg.Host, cfg.User, cfg.DBName, cfg.Port, cfg.SSLMode)
+	if cfg.Password != "" {
+		dsn += fmt.Sprintf(" password='%s'", cfg.Password)
+	}
 
 	var err error
 	// 使用 GORM 打开连接

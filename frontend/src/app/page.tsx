@@ -2,56 +2,93 @@ import React from "react";
 import { ArticleCard } from "@/components/ArticleCard";
 import { MainLayout } from "@/components/layout/MainLayout";
 
-// Mock Data mimicking the screenshot
-const posts = [
-  {
-    id: 1,
-    date: "2026/01/30",
-    category: "分享热爱",
-    title: "Bartender 的替代品",
-    summary:
-      "之前写过一篇文章介绍我的菜单栏配置：一点点展开我的 macOS，那时我还很喜欢 Bartender。macOS Tahoe 更新重写了菜单栏相关的底层交互逻辑，很多第三方菜单栏管理软件开始频繁出问题，直到现在 Bartender 依然偶尔会崩溃。自从被收购之后，Bartender 的稳定性肉眼可见地下滑，慢慢降...",
-  },
-  {
-    id: 2,
-    date: "2026/01/26",
-    category: "杂文随笔",
-    title: "在 AI 浪潮中迷失的 Setapp",
-    summary:
-      "引 看到 Setapp 要求新上架的软件具备 AI 功能，忍不住吐槽几句。过去两年上线的新工具里，我印象较好的有 LookAway、Bike、Strongbox、Supercharge、Muse 和 Spark。它们的共同特点是：用途明确，解决实际问题。都不以 AI 为主。期间 Setapp 接连上架了一批评分低、用途模糊的 AI 软...",
-  },
-  {
-    id: 3,
-    date: "2026/01/25",
-    category: "分享热爱",
-    title: "再谈 iA Writer",
-    summary:
-      "引 去年写过一篇文章聊 iA Writer 的手感，但它的优秀之处不仅于此。iA Writer 与 Obsidian 这种偏重的笔记软件不同，定位在 Apple Notes、Typora、Drafts、FSNotes 这类轻输入编辑器之间，解决的是一个具体问题：舒适的用 Markdown 在 iOS、iPadOS 和 macOS 写作，本地优先，轻量易用...",
-  },
-  {
-    id: 4,
-    date: "2026/01/18",
-    category: "分享热爱",
-    title: "Plog 5 生活中的一点橙",
-    summary:
-      "最近发现自己除了黑白灰，还对橙色有一些偏爱，点缀在生活中的一些小物件上。",
-  },
-];
+// Define the shape of data from API
+interface Post {
+  id: string;
+  type: string;
+  sub_type?: string;
+  title: string;
+  summary: string;
+  published_at: string;
+}
 
-export default function Home() {
+interface ApiResponse {
+  data: Post[];
+  meta: {
+    total: number;
+    page: number;
+    pageSize: number;
+  };
+}
+
+// Function to fetch posts from backend
+async function getPosts(): Promise<Post[]> {
+  // Prevent caching for now so you see updates immediately (for dev)
+  // In production, you might want revalidate: 60 etc.
+  try {
+    const res = await fetch("http://127.0.0.1:8080/posts", {
+      cache: "no-store", 
+    });
+
+    if (!res.ok) {
+      throw new Error("Failed to fetch posts");
+    }
+
+    const json: ApiResponse = await res.json();
+    return json.data || [];
+  } catch (error) {
+    console.error("Error fetching posts:", error);
+    return [];
+  }
+}
+
+// Helper to format date: "2026-02-02T..." -> "2026/02/02"
+function formatDate(isoString: string) {
+  if (!isoString) return "";
+  const date = new Date(isoString);
+  return date.toLocaleDateString("zh-CN", {
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  });
+}
+
+// Helper to map type/subtype to display category
+function formatCategory(type: string, subType?: string) {
+  if (type === 'article') {
+    if (subType === 'tech') return '技术笔记';
+    if (subType === 'life') return '生活随笔';
+    return '杂文随笔';
+  }
+  if (type === 'plog') return 'PLOG';
+  if (type === 'project') return 'PROJECT';
+  return type.toUpperCase();
+}
+
+export default async function Home() {
+  const posts = await getPosts();
+
   return (
     <MainLayout>
+
       {/* Blog Post List */}
       <main className="space-y-16">
-        {posts.map((post) => (
-          <ArticleCard
-            key={post.id}
-            date={post.date}
-            category={post.category}
-            title={post.title}
-            summary={post.summary}
-          />
-        ))}
+        {posts.length === 0 ? (
+          <div className="text-center py-20 text-gray-500">
+            <p>还没有发布任何文章...</p>
+          </div>
+        ) : (
+          posts.map((post) => (
+            <ArticleCard
+              key={post.id}
+              id={post.id}
+              date={formatDate(post.published_at)}
+              category={formatCategory(post.type, post.sub_type)}
+              title={post.title}
+              summary={post.summary}
+            />
+          ))
+        )}
       </main>
     </MainLayout>
   );
