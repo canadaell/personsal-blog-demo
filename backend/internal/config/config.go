@@ -9,6 +9,7 @@ import (
 type Config struct {
 	Server   ServerConfig   `mapstructure:"server"`
 	Database DatabaseConfig `mapstructure:"database"`
+	R2       R2Config       `mapstructure:"r2"`
 }
 
 type ServerConfig struct {
@@ -22,6 +23,14 @@ type DatabaseConfig struct {
 	Password string `mapstructure:"password"`
 	DBName   string `mapstructure:"dbname"`
 	SSLMode  string `mapstructure:"sslmode"`
+}
+
+type R2Config struct {
+	AccountID       string `mapstructure:"account_id"`
+	AccessKeyID     string `mapstructure:"access_key_id"`
+	SecretAccessKey string `mapstructure:"secret_access_key"`
+	BucketName      string `mapstructure:"bucket_name"`
+	PublicDomain    string `mapstructure:"public_domain"`
 }
 
 var AppConfig Config

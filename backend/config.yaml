@@ -8,3 +8,10 @@ database:
   password: ""
   dbname: "blog_db"
   sslmode: "disable"
+
+r2:
+  account_id: "c54b009d6fb9bc383dfd95b1aea659ea"
+  access_key_id: "6955126bb0b9639d0b0a194dd27e2791"
+  secret_access_key: "e6ec71d91f6d53b2b0781cd03571b49c555addfea787ca85722ec69add4e9e1a"
+  bucket_name: "zhoumingde"
+  public_domain: "https://img.zhouming.de" # e.g. https://pub-xxx.r2.dev or your custom domain

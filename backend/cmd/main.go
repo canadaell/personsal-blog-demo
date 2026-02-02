@@ -41,6 +41,15 @@ func main() {
 	postService := service.NewPostService()
 	postHandler := handler.NewPostHandler(postService)
 
+	uploadService, err := service.NewUploadService()
+	if err != nil {
+		// Just log error, don't crash, maybe R2 not configured
+		// But in main.go often panic is okay. User asked for flexibility.
+		// Let's print.
+		println("Failed to init upload service:", err.Error())
+	}
+	uploadHandler := handler.NewUploadHandler(uploadService)
+
 	// Public Routes
 	r.GET("/ping", func(c *gin.Context) {
 		c.JSON(200, gin.H{
@@ -71,6 +80,7 @@ func main() {
 		adminGroup.PUT("/posts/:id", postHandler.Update)
 		adminGroup.DELETE("/posts/:id", postHandler.Delete)
 		adminGroup.GET("/stats", postHandler.GetStats)
+		adminGroup.POST("/upload", uploadHandler.Upload)
 	}
 
 	// Start Server

@@ -6,6 +6,7 @@ import Image from "@tiptap/extension-image";
 import Link from "@tiptap/extension-link";
 import Typography from "@tiptap/extension-typography";
 import Youtube from "@tiptap/extension-youtube";
+import { useRef } from "react";
 
 interface TiptapEditorProps {
   content?: string | object;
@@ -14,14 +15,64 @@ interface TiptapEditorProps {
 }
 
 const MenuBar = ({ editor }: { editor: any }) => {
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
   if (!editor) {
     return null;
   }
 
-  const addImage = () => {
-    const url = window.prompt("Image URL");
-    if (url) {
-      editor.chain().focus().setImage({ src: url }).run();
+  const triggerImageUpload = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Upload logic
+    const formData = new FormData();
+    formData.append("file", file);
+
+    const token = document.cookie
+      .split("; ")
+      .find((row) => row.startsWith("token="))
+      ?.split("=")[1];
+
+    if (!token) {
+        alert("Authentication lost. Please login.");
+        return;
+    }
+
+    try {
+        // Show loading state or something if needed
+        // For simplicity, just waiting
+        const res = await fetch("http://localhost:8080/admin/upload", {
+            method: "POST",
+            headers: {
+                Authorization: `Bearer ${token}`
+            },
+            body: formData
+        });
+
+        if (!res.ok) {
+            throw new Error("Upload failed");
+        }
+
+        const data = await res.json();
+        const url = data.url;
+        
+        if (url) {
+            editor.chain().focus().setImage({ src: url }).run();
+        }
+
+    } catch (error) {
+        console.error(error);
+        alert("Failed to upload image");
+    } finally {
+        // Clear input
+        if (fileInputRef.current) {
+            fileInputRef.current.value = "";
+        }
     }
   };
 
@@ -38,6 +89,14 @@ const MenuBar = ({ editor }: { editor: any }) => {
 
   return (
     <div className="border-b border-gray-200 p-2 flex flex-wrap gap-2 sticky top-0 bg-white z-10">
+      <input 
+        type="file" 
+        ref={fileInputRef} 
+        onChange={handleFileChange} 
+        className="hidden" 
+        accept="image/*"
+      />
+      
       <button
         type="button"
         onClick={() => editor.chain().focus().toggleBold().run()}
@@ -134,7 +193,7 @@ const MenuBar = ({ editor }: { editor: any }) => {
       </button>
       <button
         type="button"
-        onClick={addImage}
+        onClick={triggerImageUpload}
         className="px-2 py-1 rounded text-sm font-medium bg-blue-50 text-blue-600 hover:bg-blue-100"
       >
         Image
