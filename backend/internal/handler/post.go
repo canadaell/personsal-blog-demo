@@ -112,3 +112,12 @@ func (h *PostHandler) Update(c *gin.Context) {
 
 	c.JSON(http.StatusOK, post)
 }
+
+func (h *PostHandler) Delete(c *gin.Context) {
+	id := c.Param("id")
+	if err := h.postService.DeletePost(id); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete post"})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"message": "Post deleted successfully"})
+}

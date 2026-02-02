@@ -69,6 +69,7 @@ func main() {
 		adminGroup.POST("/posts", postHandler.Create)
 		adminGroup.GET("/posts", postHandler.AdminList)
 		adminGroup.PUT("/posts/:id", postHandler.Update)
+		adminGroup.DELETE("/posts/:id", postHandler.Delete)
 		adminGroup.GET("/stats", postHandler.GetStats)
 	}
 

@@ -164,3 +164,10 @@ func (s *PostService) UpdatePost(id string, req model.UpdatePostRequest) (*model
 
 	return &post, nil
 }
+
+func (s *PostService) DeletePost(id string) error {
+	if err := database.DB.Where("id = ?", id).Delete(&model.Post{}).Error; err != nil {
+		return err
+	}
+	return nil
+}

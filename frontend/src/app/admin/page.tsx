@@ -72,10 +72,48 @@ export default function AdminDashboard() {
     fetchData();
   }, [router]);
 
-  const handleDelete = (id: string) => {
-    if (confirm("Delete functionality not fully implemented yet. Are you sure?")) {
-      // TODO: Implement delete API call using token
-      alert("Delete API pending...");
+  const handleDelete = async (id: string) => {
+    if (!confirm("Are you sure you want to delete this post?")) return;
+
+    // Get Token
+    const token = document.cookie
+    .split("; ")
+    .find((row) => row.startsWith("token="))
+    ?.split("=")[1];
+
+    if (!token) {
+        alert("Not authenticated");
+        return;
+    }
+
+    try {
+        const res = await fetch(`http://localhost:8080/admin/posts/${id}`, {
+            method: "DELETE",
+            headers: {
+                Authorization: `Bearer ${token}`
+            }
+        });
+
+        if (res.ok) {
+            // Remove from state locally
+            setPosts(posts.filter((post) => post.id !== id));
+            // Update stats locally (simple approximation)
+            // Or just re-fetch stats? Re-fetching is safer.
+            // For now, let's just decrement total locally to be snappy.
+            // But we don't know if it was draft or published without checking post object.
+            // Let's refetch stats.
+            const statsRes = await fetch("http://localhost:8080/admin/stats", { 
+                headers: { Authorization: `Bearer ${token}` } 
+            });
+            if (statsRes.ok) {
+                setStats(await statsRes.json());
+            }
+        } else {
+            alert("Failed to delete post");
+        }
+    } catch (error) {
+        console.error("Delete failed", error);
+        alert("Error deleting post");
     }
   };
 
