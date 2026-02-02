@@ -5,6 +5,7 @@ import StarterKit from "@tiptap/starter-kit";
 import Image from "@tiptap/extension-image";
 import Link from "@tiptap/extension-link";
 import Typography from "@tiptap/extension-typography";
+import Youtube from "@tiptap/extension-youtube";
 import { useEffect } from "react";
 
 interface TiptapViewerProps {
@@ -22,6 +23,9 @@ export default function TiptapViewer({ content }: TiptapViewerProps) {
         openOnClick: true, // Allow clicking links
       }),
       Typography,
+      Youtube.configure({
+        controls: false,
+      }),
     ],
     content: content,
     editorProps: {

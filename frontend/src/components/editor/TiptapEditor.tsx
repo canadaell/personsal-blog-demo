@@ -5,6 +5,7 @@ import StarterKit from "@tiptap/starter-kit";
 import Image from "@tiptap/extension-image";
 import Link from "@tiptap/extension-link";
 import Typography from "@tiptap/extension-typography";
+import Youtube from "@tiptap/extension-youtube";
 
 interface TiptapEditorProps {
   content?: string | object;
@@ -18,9 +19,20 @@ const MenuBar = ({ editor }: { editor: any }) => {
   }
 
   const addImage = () => {
-    const url = window.prompt("URL");
+    const url = window.prompt("Image URL");
     if (url) {
       editor.chain().focus().setImage({ src: url }).run();
+    }
+  };
+
+  const addYoutube = () => {
+    const url = window.prompt("Enter YouTube URL");
+    if (url) {
+      editor.commands.setYoutubeVideo({
+        src: url,
+        width: 640,
+        height: 480,
+      });
     }
   };
 
@@ -127,6 +139,13 @@ const MenuBar = ({ editor }: { editor: any }) => {
       >
         Image
       </button>
+      <button
+        type="button"
+        onClick={addYoutube}
+        className="px-2 py-1 rounded text-sm font-medium bg-red-50 text-red-600 hover:bg-red-100"
+      >
+        YouTube
+      </button>
     </div>
   );
 };
@@ -141,6 +160,9 @@ export default function TiptapEditor({ content, onChange, onJsonChange }: Tiptap
         openOnClick: false,
       }),
       Typography,
+      Youtube.configure({
+        controls: false,
+      }),
     ],
     content: content,
     onUpdate: ({ editor }) => {
