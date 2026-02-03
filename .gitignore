@@ -1,0 +1,6 @@
+# Deploy artifacts
+deploy_dist/
+backend/backend_server
+
+# System files
+.DS_Store

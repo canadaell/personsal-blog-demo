@@ -5,7 +5,7 @@ database:
   host: "localhost"
   port: "5432"
   user: "mingde"
-  password: ""
+  password: "!Zmdsnd0620"
   dbname: "blog_db"
   sslmode: "disable"
 
