@@ -1,30 +1,34 @@
 # Build Stage
-FROM golang:1.20-alpine AS builder
+FROM golang:1.23-alpine AS builder
 
 WORKDIR /app
+RUN apk add --no-cache git
 
 # Copy go mod and sum files
 COPY go.mod go.sum ./
-
-# Download all dependencies
 RUN go mod download
 
-# Copy the source code
+# Copy source code
 COPY . .
 
 # Build the application
-RUN CGO_ENABLED=0 GOOS=linux go build -o main cmd/main.go
+RUN go build -o server cmd/main.go
 
-# Run Stage
+# Runtime Stage
 FROM alpine:latest
 
-WORKDIR /root/
+WORKDIR /app
 
-# Copy the binary from builder
-COPY --from=builder /app/main .
-COPY --from=builder /app/config.yaml . 
-# 注意：config.yaml 如果不同环境不同，可以用 config map 或 环境变量覆盖
+# Install certificates for external APIs (like R2)
+RUN apk --no-cache add ca-certificates tzdata
 
+# Copy binary from builder
+COPY --from=builder /app/server .
+# Copy migrations (if needed at runtime)
+# COPY --from=builder /app/migrations ./migrations
+
+# Expose port
 EXPOSE 8080
 
-CMD ["./main"]
+# Command to run (expecting config.yaml to be mounted or env vars provided)
+CMD ["./server"]
