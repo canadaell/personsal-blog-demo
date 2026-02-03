@@ -48,10 +48,10 @@ export const Header = () => {
             {/* Header Section */}
             <header className="mb-12 md:mb-16">
                 <h1 className="text-4xl font-semibold text-gray-900 mb-3 tracking-tight">
-                    About Mingde
+                    Another Mingde
                 </h1>
                 <p className="text-gray-500 italic font-serif text-sm md:text-base">
-                    "Seize the day, gather ye rosebuds while ye may."
+                    "Debug code, and debug myself."
                 </p>
             </header>
 
