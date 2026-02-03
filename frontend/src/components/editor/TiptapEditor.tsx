@@ -1,6 +1,6 @@
 "use client";
 
-import { useEditor, EditorContent } from "@tiptap/react";
+import { useEditor, EditorContent, Editor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Image from "@tiptap/extension-image";
 import Link from "@tiptap/extension-link";
@@ -11,10 +11,10 @@ import { useRef } from "react";
 interface TiptapEditorProps {
   content?: string | object;
   onChange: (html: string) => void;
-  onJsonChange?: (json: any) => void;
+  onJsonChange?: (json: object) => void;
 }
 
-const MenuBar = ({ editor }: { editor: any }) => {
+const MenuBar = ({ editor }: { editor: Editor | null }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   if (!editor) {

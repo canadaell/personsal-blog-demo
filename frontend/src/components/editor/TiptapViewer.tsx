@@ -9,7 +9,7 @@ import Youtube from "@tiptap/extension-youtube";
 import { useEffect } from "react";
 
 interface TiptapViewerProps {
-  content: any; // JSON content
+  content: object; // JSON content
 }
 
 export default function TiptapViewer({ content }: TiptapViewerProps) {

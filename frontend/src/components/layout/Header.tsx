@@ -51,7 +51,7 @@ export const Header = () => {
                     Another Mingde
                 </h1>
                 <p className="text-gray-500 italic font-serif text-sm md:text-base">
-                    "Debug code, and debug myself."
+                    &quot;Debug code, and debug myself.&quot;
                 </p>
             </header>
 

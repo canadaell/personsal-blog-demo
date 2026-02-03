@@ -84,7 +84,7 @@ export default function EditPostPage(props: EditPostPageProps) {
     };
 
     init();
-  }, []);
+  }, [props.params]);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
@@ -236,7 +236,6 @@ export default function EditPostPage(props: EditPostPageProps) {
                   if provided.
               */}
               <TiptapEditor 
-                // @ts-ignore: Assuming we fix TiptapEditor to accept contentJson or handle it within content prop check
                 content={formData.contentJson} 
                 onChange={(html) => setFormData(prev => ({ ...prev, contentHtml: html }))}
                 onJsonChange={(json) => setFormData(prev => ({ ...prev, contentJson: json }))}

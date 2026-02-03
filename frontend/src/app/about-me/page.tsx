@@ -10,10 +10,10 @@ export default function AboutMe() {
         </h2>
         <div className="prose max-w-none text-gray-600 leading-relaxed">
           <p>
-            Hello! I'm Mingde. I'm a passionate developer...
+            Hello! I&apos;m Mingde. I&apos;m a passionate developer...
           </p>
           <p>
-            "Seize the day, gather ye rosebuds while ye may."
+            &quot;Seize the day, gather ye rosebuds while ye may.&quot;
           </p>
         </div>
       </div>
