@@ -56,9 +56,9 @@ function formatDate(isoString: string) {
 // Helper to map type/subtype to display category
 function formatCategory(type: string, subType?: string) {
   if (type === 'article') {
-    if (subType === 'tech') return '技术笔记';
-    if (subType === 'life') return '生活随笔';
-    return '杂文随笔';
+    if (subType === 'tech') return 'Tech note';
+    if (subType === 'life') return 'Life';
+    return 'Essay';
   }
   if (type === 'plog') return 'PLOG';
   if (type === 'project') return 'PROJECT';

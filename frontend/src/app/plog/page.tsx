@@ -55,9 +55,9 @@ function formatCategory(type: string, subType?: string) {
   if (type === 'plog') return 'PLOG';
   
   if (type === 'article') {
-    if (subType === 'tech') return '技术笔记';
-    if (subType === 'life') return '生活随笔';
-    return '杂文随笔';
+    if (subType === 'tech') return 'Tech notes';
+    if (subType === 'life') return 'Life';
+    return 'Essay';
   }
   if (type === 'project') return 'PROJECT';
   return type.toUpperCase();

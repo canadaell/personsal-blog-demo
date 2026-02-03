@@ -7,15 +7,15 @@ import TiptapEditor from "@/components/editor/TiptapEditor";
 
 // Map UI Labels to DB Values
 const contentTypes = [
-  { label: "Article (文章)", value: "article" },
-  { label: "Plog (动态)", value: "plog" },
-  { label: "Project (项目)", value: "project" },
+  { label: "Article", value: "article" },
+  { label: "Plog", value: "plog" },
+  { label: "Project", value: "project" },
 ];
 
 const articleSubTypes = [
-  { label: "Tech Notes (技术笔记)", value: "tech" },
-  { label: "Life (生活随笔)", value: "life" },
-  { label: "Other", value: "other" },
+  { label: "Tech Notes", value: "tech" },
+  { label: "Life", value: "life" },
+  { label: "Essay", value: "essay" },
 ];
 
 export default function CreatePost() {
