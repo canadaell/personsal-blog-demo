@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import TiptapEditor from "@/components/editor/TiptapEditor";
+import { API_BASE_URL } from "@/lib/config";
 
 // Map UI Labels to DB Values
 const contentTypes = [
@@ -70,7 +71,7 @@ export default function CreatePost() {
         meta: {}, // Expand later if needed
       };
 
-      const res = await fetch("http://localhost:8080/admin/posts", {
+      const res = await fetch(`${API_BASE_URL}/admin/posts`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

@@ -45,6 +45,8 @@ jobs:
           context: ./frontend
           file: ./frontend/Dockerfile
           push: true
+          build-args: |
+            NEXT_PUBLIC_API_URL=https://api.zhouming.de
           tags: |
             ${{ env.REGISTRY }}/canadaell/personsal-blog-demo/frontend:latest
             ${{ env.REGISTRY }}/canadaell/personsal-blog-demo/frontend:${{ github.sha }} 

@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import TiptapEditor from "@/components/editor/TiptapEditor";
+import { API_BASE_URL } from "@/lib/config";
 
 interface EditPostPageProps {
   params: Promise<{
@@ -38,7 +39,7 @@ export default function EditPostPage(props: EditPostPageProps) {
         // Note: We can use the public API here or the admin one.
         // Since we are admin, let's assume we have a token, but public API is easier to fetch for read-only View logic first.
         // However, we want to PUT to admin API.
-        const res = await fetch(`http://localhost:8080/posts/${params.id}`, { cache: "no-store"});
+        const res = await fetch(`${API_BASE_URL}/posts/${params.id}`, { cache: "no-store"});
         
         if (!res.ok) {
             throw new Error("Failed to fetch post");
@@ -121,7 +122,7 @@ export default function EditPostPage(props: EditPostPageProps) {
         status: formData.status,
       };
 
-      const res = await fetch(`http://localhost:8080/admin/posts/${postId}`, {
+      const res = await fetch(`${API_BASE_URL}/admin/posts/${postId}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",

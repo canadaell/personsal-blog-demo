@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { API_BASE_URL } from "@/lib/config";
 
 // Define Types
 interface Post {
@@ -50,13 +51,13 @@ export default function AdminDashboard() {
         const headers = { Authorization: `Bearer ${token}` };
 
         // 1. Fetch Stats
-        const statsRes = await fetch("http://localhost:8080/admin/stats", { headers });
+        const statsRes = await fetch(`${API_BASE_URL}/admin/stats`, { headers });
         if (statsRes.ok) {
           setStats(await statsRes.json());
         }
 
         // 2. Fetch Posts
-        const postsRes = await fetch("http://localhost:8080/admin/posts", { headers });
+        const postsRes = await fetch(`${API_BASE_URL}/admin/posts`, { headers });
         if (postsRes.ok) {
           const json = await postsRes.json();
           setPosts(json.data || []);
@@ -87,7 +88,7 @@ export default function AdminDashboard() {
     }
 
     try {
-        const res = await fetch(`http://localhost:8080/admin/posts/${id}`, {
+        const res = await fetch(`${API_BASE_URL}/admin/posts/${id}`, {
             method: "DELETE",
             headers: {
                 Authorization: `Bearer ${token}`
@@ -102,7 +103,7 @@ export default function AdminDashboard() {
             // For now, let's just decrement total locally to be snappy.
             // But we don't know if it was draft or published without checking post object.
             // Let's refetch stats.
-            const statsRes = await fetch("http://localhost:8080/admin/stats", { 
+            const statsRes = await fetch(`${API_BASE_URL}/admin/stats`, { 
                 headers: { Authorization: `Bearer ${token}` } 
             });
             if (statsRes.ok) {

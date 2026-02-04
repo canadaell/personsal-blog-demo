@@ -7,6 +7,7 @@ import Link from "@tiptap/extension-link";
 import Typography from "@tiptap/extension-typography";
 import Youtube from "@tiptap/extension-youtube";
 import { useRef } from "react";
+import { API_BASE_URL } from "@/lib/config";
 
 interface TiptapEditorProps {
   content?: string | object;
@@ -46,7 +47,7 @@ const MenuBar = ({ editor }: { editor: Editor | null }) => {
     try {
         // Show loading state or something if needed
         // For simplicity, just waiting
-        const res = await fetch("http://localhost:8080/admin/upload", {
+        const res = await fetch(`${API_BASE_URL}/admin/upload`, {
             method: "POST",
             headers: {
                 Authorization: `Bearer ${token}`
