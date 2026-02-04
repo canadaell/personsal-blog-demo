@@ -100,5 +100,77 @@ PostgreSQL data is persisted using server-attached block storage, while user-upl
    yarn dev
    ```
 
+
+## Manual Deployment Guide
+
+Since the project uses a separate domain for the backend API, the frontend needs to be built with the correct environment variable baked in.
+
+### 1. Local Machine: Build & Transfer
+
+Run these commands in the root directory of the project:
+
+**Step 1.1: Build Frontend Image**
+Ensure you inject the correct production API URL.
+```bash
+docker build \
+  --platform linux/amd64 \
+  --build-arg NEXT_PUBLIC_API_URL=https://api.zhouming.de \
+  --no-cache \
+  -t blog-frontend ./frontend
+```
+
+**Step 1.2: Save & Compress Image**
+Export the built image to a gzipped tarball.
+```bash
+docker save blog-frontend | gzip > blog-frontend.tar.gz
+```
+
+**Step 1.3: Transfer to Server**
+Copy the file to your server (replace `ubuntu@213.32.18.39` with your actual user/IP).
+```bash
+scp blog-frontend.tar.gz ubuntu@213.32.18.39:~/
+```
+
+### 2. Remote Server: Load & Restart
+
+SSH into your server and run:
+
+```bash
+# 1. Load the new image
+docker load < blog-frontend.tar.gz
+
+# 2. Go to your deployment directory
+cd ~/blog_deploy
+
+# 3. Force recreate the frontend container
+docker compose up -d --force-recreate frontend
+```
+
+### 3. Backend Deployment (If needed)
+
+If you have updated the Go backend code:
+
+**Step 3.1: Build & Transfer**
+```bash
+# Build
+docker build --platform linux/amd64 -t blog-backend ./backend
+
+# Save & Compress
+docker save blog-backend | gzip > blog-backend.tar.gz
+
+# Transfer
+scp blog-backend.tar.gz ubuntu@213.32.18.39:~/
+```
+
+**Step 3.2: Server - Load & Restart**
+```bash
+# Load image
+docker load < blog-backend.tar.gz
+
+# Restart service
+cd ~/blog_deploy
+docker compose up -d --force-recreate backend
+```
+
 ---
 *Created by Mingde Zhou*
