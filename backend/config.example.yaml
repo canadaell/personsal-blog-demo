@@ -5,7 +5,7 @@ database:
   host: "localhost"
   port: "5432"
   user: "postgres"
-  password: "<set-via-env-or-local-secret>"
+  password: "<db-password>"
   dbname: "blog_db"
   sslmode: "disable"
 
@@ -14,7 +14,7 @@ r2:
   access_key_id: "<r2-access-key-id>"
   secret_access_key: "<r2-secret-access-key>"
   bucket_name: "<r2-bucket-name>"
-  public_domain: "https://example.com" # e.g. https://pub-xxx.r2.dev or your custom domain
+  public_domain: "https://example.com"
 
 auth:
   jwt_secret: "<strong-random-secret-at-least-32-chars>"

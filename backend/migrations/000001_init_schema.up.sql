@@ -70,19 +70,3 @@ CREATE TRIGGER update_posts_updated_at
     BEFORE UPDATE ON posts
     FOR EACH ROW
     EXECUTE FUNCTION update_updated_at_column();
-
--- ==========================================
--- 5. 初始化默认数据 (Seed Data)
--- ==========================================
--- 插入默认管理员账号
--- username: blogadmin
--- password: 11235813
--- 如果 username 此时已存在，则什么都不做 (ON CONFLICT DO NOTHING)
-INSERT INTO admin_users (username, email, password_hash, role)
-VALUES (
-    'blogadmin', 
-    'admin@example.com', 
-    crypt('11235813', gen_salt('bf')), -- 使用 pgcrypto 生成 bcrypt hash
-    'super_admin'
-)
-ON CONFLICT (username) DO NOTHING;

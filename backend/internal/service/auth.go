@@ -2,8 +2,10 @@ package service
 
 import (
 	"errors"
+	"fmt"
 	"time"
 
+	"github.com/canadaell/personsal-blog-demo/backend/internal/config"
 	"github.com/canadaell/personsal-blog-demo/backend/internal/database"
 	"github.com/canadaell/personsal-blog-demo/backend/internal/model"
 	"github.com/golang-jwt/jwt/v5"
@@ -12,14 +14,14 @@ import (
 	"gorm.io/gorm"
 )
 
-var jwtSecret = []byte("your-secret-key-should-be-in-env") // TODO: Move to config
-
-type AuthService struct{}
+type AuthService struct {
+	jwtSecret []byte
+}
 
 func NewAuthService() *AuthService {
-	// Simple loader for secret from config if available, fallback for now
-	// In production, load this from config.AppConfig or env
-	return &AuthService{}
+	return &AuthService{
+		jwtSecret: []byte(config.AppConfig.Auth.JWTSecret),
+	}
 }
 
 func (s *AuthService) Login(req model.LoginRequest) (*model.LoginResponse, error) {
@@ -67,5 +69,39 @@ func (s *AuthService) generateToken(user *model.AdminUser) (string, error) {
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	return token.SignedString(jwtSecret)
+	return token.SignedString(s.jwtSecret)
+}
+
+func (s *AuthService) EnsureInitialAdmin() error {
+	cfg := config.AppConfig.Auth
+	if cfg.InitialAdminUsername == "" || cfg.InitialAdminEmail == "" || cfg.InitialAdminPassword == "" {
+		return nil
+	}
+
+	var existing model.AdminUser
+	err := database.DB.Where("username = ?", cfg.InitialAdminUsername).First(&existing).Error
+	if err == nil {
+		return nil
+	}
+	if !errors.Is(err, gorm.ErrRecordNotFound) {
+		return fmt.Errorf("failed to query initial admin: %w", err)
+	}
+
+	passwordHash, err := bcrypt.GenerateFromPassword([]byte(cfg.InitialAdminPassword), bcrypt.DefaultCost)
+	if err != nil {
+		return fmt.Errorf("failed to hash initial admin password: %w", err)
+	}
+
+	admin := model.AdminUser{
+		Username:     cfg.InitialAdminUsername,
+		Email:        cfg.InitialAdminEmail,
+		PasswordHash: string(passwordHash),
+		Role:         "super_admin",
+	}
+
+	if err := database.DB.Create(&admin).Error; err != nil {
+		return fmt.Errorf("failed to create initial admin: %w", err)
+	}
+
+	return nil
 }

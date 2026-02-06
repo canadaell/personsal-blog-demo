@@ -4,11 +4,10 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/canadaell/personsal-blog-demo/backend/internal/config"
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
 )
-
-var jwtSecret = []byte("your-secret-key-should-be-in-env") // Should match service
 
 func AuthMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
@@ -31,7 +30,7 @@ func AuthMiddleware() gin.HandlerFunc {
 			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 				return nil, jwt.ErrSignatureInvalid
 			}
-			return jwtSecret, nil
+			return []byte(config.AppConfig.Auth.JWTSecret), nil
 		})
 
 		if err != nil || !token.Valid {

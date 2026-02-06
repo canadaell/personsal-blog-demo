@@ -36,6 +36,9 @@ func main() {
 
 	// Initialize Services & Handlers
 	authService := service.NewAuthService()
+	if err := authService.EnsureInitialAdmin(); err != nil {
+		panic("failed to bootstrap initial admin: " + err.Error())
+	}
 	authHandler := handler.NewAuthHandler(authService)
 
 	postService := service.NewPostService()

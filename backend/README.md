@@ -10,8 +10,8 @@ This is the Go backend for the Personal Blog application, built with Gin and GOR
 
 ## 🚀 Quick Start (Local Development)
 
-### 1. Configure Database & R2
-Copy the example config (create one if not exists) to `config.yaml`:
+### 1. Configure Database, R2 and Auth
+Copy `config.example.yaml` to `config.yaml` and fill in real values:
 ```yaml
 server:
   port: ":8080"
@@ -30,7 +30,16 @@ r2:
   secret_access_key: "<your-r2-secret-access-key>"
   bucket_name: "<your-bucket-name>"
   public_domain: "https://your-custom-domain.com" # No trailing slash
+
+auth:
+  jwt_secret: "<strong-random-secret-at-least-32-chars>"
+  # Optional bootstrap admin on first startup:
+  initial_admin_username: ""
+  initial_admin_email: ""
+  initial_admin_password: ""
 ```
+
+If `initial_admin_*` is set, backend will create that admin only when the username does not exist.
 
 ### 2. Run Database Migrations
 Initialize the database schema using `psql` or `golang-migrate`.
@@ -52,6 +61,7 @@ The server will start on port specified in `config.yaml` (default `:8080`).
 ### Configuration via Environment Variables
 For production, it is recommended to override sensitive configuration using environment variables or a secure `config.yaml`.
 The application uses `viper`, so specific environment mapping might need setup, but typically you build a production `config.yaml` and mount it to the application.
+Examples: `AUTH_JWT_SECRET`, `AUTH_INITIAL_ADMIN_USERNAME`, `AUTH_INITIAL_ADMIN_EMAIL`, `AUTH_INITIAL_ADMIN_PASSWORD`.
 
 ### Cloudflare R2 Setup
 To enable image uploads:
@@ -65,7 +75,7 @@ To enable image uploads:
     ```bash
     GOOS=linux GOARCH=amd64 go build -o server cmd/main.go
     ```
-2.  **Transfer Files**: Upload `server` binary and `config.yaml` to your server.
+2.  **Transfer Files**: Upload `server` binary and secure `config.yaml` to your server.
 3.  **Run**: `./server` (Use Systemd or Docker for process management).
 
 ---
