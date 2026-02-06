@@ -18,6 +18,11 @@ func NewUploadHandler(uploadService *service.UploadService) *UploadHandler {
 }
 
 func (h *UploadHandler) Upload(c *gin.Context) {
+	if h.uploadService == nil || !h.uploadService.IsReady() {
+		c.JSON(http.StatusServiceUnavailable, gin.H{"error": "Upload service unavailable"})
+		return
+	}
+
 	file, err := c.FormFile("file")
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "No file uploaded (key must be 'file')"})

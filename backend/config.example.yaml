@@ -21,3 +21,7 @@ auth:
   initial_admin_username: ""
   initial_admin_email: ""
   initial_admin_password: ""
+
+cors:
+  allowed_origins:
+    - "http://localhost:3000"

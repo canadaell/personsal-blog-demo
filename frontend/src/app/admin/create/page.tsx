@@ -4,7 +4,7 @@ import React, { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import TiptapEditor from "@/components/editor/TiptapEditor";
-import { API_BASE_URL } from "@/lib/config";
+import { getCsrfToken } from "@/lib/auth-client";
 
 // Map UI Labels to DB Values
 const contentTypes = [
@@ -32,14 +32,6 @@ export default function CreatePost() {
     status: "published",
   });
 
-  // Get token from cookie manually (simple way)
-  const getToken = () => {
-    return document.cookie
-      .split("; ")
-      .find((row) => row.startsWith("token="))
-      ?.split("=")[1];
-  };
-
   const handleChange = (
     e: React.ChangeEvent<
       HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
@@ -53,9 +45,9 @@ export default function CreatePost() {
     e.preventDefault();
     setLoading(true);
 
-    const token = getToken();
-    if (!token) {
-      alert("No token found, please login again.");
+    const csrfToken = getCsrfToken();
+    if (!csrfToken) {
+      alert("Missing CSRF token, please login again.");
       router.push("/login");
       return;
     }
@@ -71,14 +63,21 @@ export default function CreatePost() {
         meta: {}, // Expand later if needed
       };
 
-      const res = await fetch(`${API_BASE_URL}/admin/posts`, {
+      const res = await fetch(`/api/admin/posts`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
+          "X-CSRF-Token": csrfToken,
         },
         body: JSON.stringify(payload),
       });
+      if (res.status === 401) {
+        router.push("/login");
+        return;
+      }
+      if (res.status === 403) {
+        throw new Error("CSRF validation failed");
+      }
 
       if (!res.ok) {
         const err = await res.json();

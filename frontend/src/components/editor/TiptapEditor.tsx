@@ -7,7 +7,7 @@ import Link from "@tiptap/extension-link";
 import Typography from "@tiptap/extension-typography";
 import Youtube from "@tiptap/extension-youtube";
 import { useRef } from "react";
-import { API_BASE_URL } from "@/lib/config";
+import { getCsrfToken } from "@/lib/auth-client";
 
 interface TiptapEditorProps {
   content?: string | object;
@@ -34,26 +34,28 @@ const MenuBar = ({ editor }: { editor: Editor | null }) => {
     const formData = new FormData();
     formData.append("file", file);
 
-    const token = document.cookie
-      .split("; ")
-      .find((row) => row.startsWith("token="))
-      ?.split("=")[1];
-
-    if (!token) {
-        alert("Authentication lost. Please login.");
+    const csrfToken = getCsrfToken();
+    if (!csrfToken) {
+        alert("Missing CSRF token. Please login.");
         return;
     }
 
     try {
-        // Show loading state or something if needed
-        // For simplicity, just waiting
-        const res = await fetch(`${API_BASE_URL}/admin/upload`, {
+        const res = await fetch(`/api/admin/upload`, {
             method: "POST",
             headers: {
-                Authorization: `Bearer ${token}`
+                "X-CSRF-Token": csrfToken
             },
             body: formData
         });
+        if (res.status === 401) {
+            alert("Authentication lost. Please login again.");
+            return;
+        }
+        if (res.status === 403) {
+            alert("CSRF validation failed. Please refresh and retry.");
+            return;
+        }
 
         if (!res.ok) {
             throw new Error("Upload failed");

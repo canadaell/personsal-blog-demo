@@ -61,6 +61,16 @@ func (h *PostHandler) List(c *gin.Context) {
 
 func (h *PostHandler) Get(c *gin.Context) {
 	id := c.Param("id")
+	post, err := h.postService.GetPublishedPostByID(id)
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Post not found"})
+		return
+	}
+	c.JSON(http.StatusOK, post)
+}
+
+func (h *PostHandler) AdminGet(c *gin.Context) {
+	id := c.Param("id")
 	post, err := h.postService.GetPostByID(id)
 	if err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Post not found"})

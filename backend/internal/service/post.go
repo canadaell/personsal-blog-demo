@@ -88,6 +88,14 @@ func (s *PostService) GetPostByID(id string) (*model.Post, error) {
 	return &post, nil
 }
 
+func (s *PostService) GetPublishedPostByID(id string) (*model.Post, error) {
+	var post model.Post
+	if err := database.DB.Where("id = ? AND status = ?", id, "published").First(&post).Error; err != nil {
+		return nil, err
+	}
+	return &post, nil
+}
+
 func (s *PostService) GetDashboardStats() (*model.DashboardStats, error) {
 	var stats model.DashboardStats
 

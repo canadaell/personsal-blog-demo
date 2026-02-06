@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { API_BASE_URL } from "@/lib/config";
+import { getCsrfToken } from "@/lib/auth-client";
 
 // Define Types
 interface Post {
@@ -36,28 +36,23 @@ export default function AdminDashboard() {
 
   useEffect(() => {
     const fetchData = async () => {
-      // Get Token
-      const token = document.cookie
-        .split("; ")
-        .find((row) => row.startsWith("token="))
-        ?.split("=")[1];
-
-      if (!token) {
-        router.push("/login");
-        return;
-      }
-
       try {
-        const headers = { Authorization: `Bearer ${token}` };
-
         // 1. Fetch Stats
-        const statsRes = await fetch(`${API_BASE_URL}/admin/stats`, { headers });
+        const statsRes = await fetch(`/api/admin/stats`, { cache: "no-store" });
+        if (statsRes.status === 401) {
+          router.push("/login");
+          return;
+        }
         if (statsRes.ok) {
           setStats(await statsRes.json());
         }
 
         // 2. Fetch Posts
-        const postsRes = await fetch(`${API_BASE_URL}/admin/posts`, { headers });
+        const postsRes = await fetch(`/api/admin/posts`, { cache: "no-store" });
+        if (postsRes.status === 401) {
+          router.push("/login");
+          return;
+        }
         if (postsRes.ok) {
           const json = await postsRes.json();
           setPosts(json.data || []);
@@ -76,35 +71,34 @@ export default function AdminDashboard() {
   const handleDelete = async (id: string) => {
     if (!confirm("Are you sure you want to delete this post?")) return;
 
-    // Get Token
-    const token = document.cookie
-    .split("; ")
-    .find((row) => row.startsWith("token="))
-    ?.split("=")[1];
-
-    if (!token) {
-        alert("Not authenticated");
-        return;
-    }
-
     try {
-        const res = await fetch(`${API_BASE_URL}/admin/posts/${id}`, {
+        const csrfToken = getCsrfToken();
+        if (!csrfToken) {
+          alert("Missing CSRF token. Please login again.");
+          router.push("/login");
+          return;
+        }
+
+        const res = await fetch(`/api/admin/posts/${id}`, {
             method: "DELETE",
             headers: {
-                Authorization: `Bearer ${token}`
+                "X-CSRF-Token": csrfToken,
             }
         });
+        if (res.status === 401) {
+          router.push("/login");
+          return;
+        }
+        if (res.status === 403) {
+          alert("CSRF validation failed. Please refresh and retry.");
+          return;
+        }
 
         if (res.ok) {
             // Remove from state locally
             setPosts(posts.filter((post) => post.id !== id));
-            // Update stats locally (simple approximation)
-            // Or just re-fetch stats? Re-fetching is safer.
-            // For now, let's just decrement total locally to be snappy.
-            // But we don't know if it was draft or published without checking post object.
-            // Let's refetch stats.
-            const statsRes = await fetch(`${API_BASE_URL}/admin/stats`, { 
-                headers: { Authorization: `Bearer ${token}` } 
+            const statsRes = await fetch(`/api/admin/stats`, {
+              cache: "no-store",
             });
             if (statsRes.ok) {
                 setStats(await statsRes.json());

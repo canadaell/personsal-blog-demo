@@ -8,11 +8,11 @@
 
 ## P1 - Security
 
-- [ ] Restrict `GET /posts/:id` to published posts only for public API; use protected admin API for draft access.
-- [ ] Add upload validation: MIME allowlist, max file size, extension/content checks, and reject unsafe files.
-- [ ] Fix upload service initialization failure path; avoid registering upload handler when service is unavailable (or return `503`).
-- [ ] Change auth cookie to `HttpOnly + Secure + SameSite` and add CSRF protection strategy.
-- [ ] Replace permissive CORS (`*` + credentials) with explicit allowed origins and strict headers/methods.
+- [x] Restrict `GET /posts/:id` to published posts only for public API; use protected admin API for draft access.
+- [x] Add upload validation: MIME allowlist, max file size, extension/content checks, and reject unsafe files.
+- [x] Fix upload service initialization failure path; avoid registering upload handler when service is unavailable (or return `503`).
+- [x] Change auth cookie to `HttpOnly + Secure + SameSite` and add CSRF protection strategy.
+- [x] Replace permissive CORS (`*` + credentials) with explicit allowed origins and strict headers/methods.
 
 ## P2 - Performance and Maintainability
 

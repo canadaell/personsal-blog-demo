@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import TiptapEditor from "@/components/editor/TiptapEditor";
-import { API_BASE_URL } from "@/lib/config";
+import { getCsrfToken } from "@/lib/auth-client";
 
 interface EditPostPageProps {
   params: Promise<{
@@ -35,12 +35,13 @@ export default function EditPostPage(props: EditPostPageProps) {
         const params = await props.params;
         setPostId(params.id);
 
-        // Fetch post details
-        // Note: We can use the public API here or the admin one.
-        // Since we are admin, let's assume we have a token, but public API is easier to fetch for read-only View logic first.
-        // However, we want to PUT to admin API.
-        const res = await fetch(`${API_BASE_URL}/posts/${params.id}`, { cache: "no-store"});
+        const res = await fetch(`/api/admin/posts/${params.id}`, { cache: "no-store"});
         
+        if (res.status === 401) {
+            router.push("/login");
+            return;
+        }
+
         if (!res.ok) {
             throw new Error("Failed to fetch post");
         }
@@ -52,29 +53,10 @@ export default function EditPostPage(props: EditPostPageProps) {
             type: post.type,
             sub_type: post.sub_type || "",
             summary: post.summary || "",
-            // Ideally backend returns content as pure JSON object.
             contentJson: post.content || {},
-            // TiptapEditor needs HTML or JSON to init? 
-            // Our TiptapEditor component logic: 
-            // If we pass `content` prop, it initializes with it.
-            // If post.content is JSON object, we should pass it.
-            // Let's check TiptapEditor.tsx implementation.
-            // Assuming it handles HTML or JSON.
-            // For now, let's pass JSON directly if the component supports it.
-            // Wait, TiptapEditor prop is `content?: string`.
-            // We might need to handle this carefully.
-            // If `content: string` expects HTML, we have a problem if we only store JSON.
-            // BUT: We added `onJsonChange`. Did we add `initialContentJson`? No.
-            // Re-read TiptapEditor.tsx.
-            contentHtml: "", // If we only have JSON, we rely on editor to load JSON.
-                             // BUT TiptapEditor might only load string content.
-                             // We might need to modify TiptapEditor to accept JSON content prop.
+            contentHtml: "",
             status: post.status,
         });
-        
-        // HACK: We need to pass JSON to TiptapEditor somehow if it supports it.
-        // Or if backend converts to HTML? Backend stores JSON.
-        // We need TiptapEditor to accept `content` as JSON object too.
 
       } catch (error) {
         console.error(error);
@@ -85,7 +67,7 @@ export default function EditPostPage(props: EditPostPageProps) {
     };
 
     init();
-  }, [props.params]);
+  }, [props.params, router]);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
@@ -100,14 +82,9 @@ export default function EditPostPage(props: EditPostPageProps) {
 
     setIsSaving(true);
     try {
-      // Get JWT from cookie
-      const token = document.cookie
-        .split("; ")
-        .find((row) => row.startsWith("token="))
-        ?.split("=")[1];
-
-      if (!token) {
-        alert("Not authenticated. Please login.");
+      const csrfToken = getCsrfToken();
+      if (!csrfToken) {
+        alert("Missing CSRF token. Please login.");
         router.push("/login");
         return;
       }
@@ -122,14 +99,21 @@ export default function EditPostPage(props: EditPostPageProps) {
         status: formData.status,
       };
 
-      const res = await fetch(`${API_BASE_URL}/admin/posts/${postId}`, {
+      const res = await fetch(`/api/admin/posts/${postId}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
+          "X-CSRF-Token": csrfToken,
         },
         body: JSON.stringify(payload),
       });
+      if (res.status === 401) {
+        router.push("/login");
+        return;
+      }
+      if (res.status === 403) {
+        throw new Error("CSRF validation failed");
+      }
 
       if (!res.ok) {
         throw new Error("Failed to update post");
@@ -227,15 +211,6 @@ export default function EditPostPage(props: EditPostPageProps) {
               Content
             </label>
             <div className="border border-gray-200 rounded-md overflow-hidden min-h-[400px]">
-              {/* Note: We pass contentJson if we can. 
-                  Currently TiptapEditor only accepts `content` (string). 
-                  If we pass empty string, it's empty. 
-                  We need to fix TiptapEditor to accept initial JSON content.
-                  For now, passing formData.contentJson as 'content' prop likely fails type check or logic.
-                  
-                  TEMPORARY FIX: We need to modify TiptapEditor to create editor with JSON content 
-                  if provided.
-              */}
               <TiptapEditor 
                 content={formData.contentJson} 
                 onChange={(html) => setFormData(prev => ({ ...prev, contentHtml: html }))}

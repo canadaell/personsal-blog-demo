@@ -1,6 +1,8 @@
 package main
 
 import (
+	"net/http"
+
 	"github.com/canadaell/personsal-blog-demo/backend/internal/config"
 	"github.com/canadaell/personsal-blog-demo/backend/internal/database"
 	"github.com/canadaell/personsal-blog-demo/backend/internal/handler"
@@ -19,12 +21,26 @@ func main() {
 	// 3. Initialize Router
 	r := gin.Default()
 
-	// CORS Middleware (Temporary for dev, refine for prod)
+	allowedOrigins := make(map[string]struct{}, len(config.AppConfig.CORS.AllowedOrigins))
+	for _, origin := range config.AppConfig.CORS.AllowedOrigins {
+		if origin != "" {
+			allowedOrigins[origin] = struct{}{}
+		}
+	}
+
 	r.Use(func(c *gin.Context) {
-		c.Writer.Header().Set("Access-Control-Allow-Origin", "*")
-		c.Writer.Header().Set("Access-Control-Allow-Credentials", "true")
-		c.Writer.Header().Set("Access-Control-Allow-Headers", "Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization, accept, origin, Cache-Control, X-Requested-With")
-		c.Writer.Header().Set("Access-Control-Allow-Methods", "POST, OPTIONS, GET, PUT, DELETE")
+		origin := c.GetHeader("Origin")
+		if origin != "" {
+			if _, ok := allowedOrigins[origin]; !ok {
+				c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"error": "Origin not allowed"})
+				return
+			}
+			c.Writer.Header().Set("Access-Control-Allow-Origin", origin)
+			c.Writer.Header().Set("Vary", "Origin")
+			c.Writer.Header().Set("Access-Control-Allow-Credentials", "true")
+			c.Writer.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization, X-CSRF-Token")
+			c.Writer.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+		}
 
 		if c.Request.Method == "OPTIONS" {
 			c.AbortWithStatus(204)
@@ -45,10 +61,8 @@ func main() {
 	postHandler := handler.NewPostHandler(postService)
 
 	uploadService, err := service.NewUploadService()
+	uploadEnabled := err == nil && uploadService != nil && uploadService.IsReady()
 	if err != nil {
-		// Just log error, don't crash, maybe R2 not configured
-		// But in main.go often panic is okay. User asked for flexibility.
-		// Let's print.
 		println("Failed to init upload service:", err.Error())
 	}
 	uploadHandler := handler.NewUploadHandler(uploadService)
@@ -80,10 +94,17 @@ func main() {
 
 		adminGroup.POST("/posts", postHandler.Create)
 		adminGroup.GET("/posts", postHandler.AdminList)
+		adminGroup.GET("/posts/:id", postHandler.AdminGet)
 		adminGroup.PUT("/posts/:id", postHandler.Update)
 		adminGroup.DELETE("/posts/:id", postHandler.Delete)
 		adminGroup.GET("/stats", postHandler.GetStats)
-		adminGroup.POST("/upload", uploadHandler.Upload)
+		if uploadEnabled {
+			adminGroup.POST("/upload", uploadHandler.Upload)
+		} else {
+			adminGroup.POST("/upload", func(c *gin.Context) {
+				c.JSON(http.StatusServiceUnavailable, gin.H{"error": "Upload service unavailable"})
+			})
+		}
 	}
 
 	// Start Server

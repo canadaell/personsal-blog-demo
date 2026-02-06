@@ -63,6 +63,7 @@ func LoadConfig() {
 	if err := viper.Unmarshal(&AppConfig); err != nil {
 		log.Fatalf("Unable to decode into struct: %v", err)
 	}
+	AppConfig.CORS.AllowedOrigins = viper.GetStringSlice("cors.allowed_origins")
 
 	if AppConfig.Auth.JWTSecret == "" {
 		log.Fatal("auth.jwt_secret must be set in config or AUTH_JWT_SECRET env")

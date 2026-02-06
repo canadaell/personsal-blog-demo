@@ -3,8 +3,6 @@
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 
-import { API_BASE_URL } from "@/lib/config";
-
 export default function LoginPage() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
@@ -16,7 +14,7 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      const res = await fetch(`${API_BASE_URL}/login`, {
+      const res = await fetch(`/api/auth/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -28,12 +26,7 @@ export default function LoginPage() {
         throw new Error('Login failed');
       }
 
-      const data = await res.json();
-      
-      // Store token in cookies (using helper or direct document.cookie for simplicity now, 
-      // ideally assume using 'js-cookie' or server actions in Next.js App Router for httpOnly)
-      // For this simple demo, we'll use document.cookie to let middleware read it.
-      document.cookie = `token=${data.token}; path=/; max-age=604800; SameSite=Lax`; // 7 days
+      await res.json();
 
       router.push("/admin"); 
     } catch (error) {

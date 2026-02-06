@@ -37,9 +37,14 @@ auth:
   initial_admin_username: ""
   initial_admin_email: ""
   initial_admin_password: ""
+
+cors:
+  allowed_origins:
+    - "http://localhost:3000"
 ```
 
 If `initial_admin_*` is set, backend will create that admin only when the username does not exist.
+`cors.allowed_origins` should contain your frontend origins (no wildcard).
 
 ### 2. Run Database Migrations
 Initialize the database schema using `psql` or `golang-migrate`.
