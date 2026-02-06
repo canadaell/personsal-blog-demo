@@ -16,7 +16,7 @@
 
 ## P2 - Performance and Maintainability
 
-- [ ] Optimize list queries to `SELECT` only required fields (exclude heavy JSON fields like `content/meta` from list endpoints).
-- [ ] Add real pagination support (`page`, `pageSize`) with validation and limits.
-- [ ] Remove hardcoded backend URLs (`127.0.0.1`/`localhost`) and use unified environment-based API config.
-- [ ] Refactor `frontend/src/app/admin/edit/[id]/page.tsx` by removing temporary comments/hacks and extracting reusable logic.
+- [x] Optimize list queries to `SELECT` only required fields (exclude heavy JSON fields like `content/meta` from list endpoints).
+- [x] Add real pagination support (`page`, `pageSize`) with validation and limits.
+- [x] Remove hardcoded backend URLs (`127.0.0.1`/`localhost`) and use unified environment-based API config.
+- [x] Refactor `frontend/src/app/admin/edit/[id]/page.tsx` by removing temporary comments/hacks and extracting reusable logic.

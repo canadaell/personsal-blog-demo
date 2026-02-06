@@ -4,6 +4,13 @@ import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import TiptapEditor from "@/components/editor/TiptapEditor";
 import { getCsrfToken } from "@/lib/auth-client";
+import {
+  articleSubTypeOptions,
+  buildUpdatePostPayload,
+  contentTypeOptions,
+  createDefaultPostFormData,
+  toPostFormData,
+} from "@/lib/post-form";
 
 interface EditPostPageProps {
   params: Promise<{
@@ -13,17 +20,8 @@ interface EditPostPageProps {
 
 export default function EditPostPage(props: EditPostPageProps) {
   const router = useRouter();
-  const [postId, setPostId] = useState<string | null>(null); // Store resolved ID
-
-  const [formData, setFormData] = useState({
-    title: "",
-    type: "article",
-    sub_type: "tech",
-    summary: "",
-    contentJson: {}, // JSON content
-    contentHtml: "", // HTML content for editor initialization
-    status: "draft",
-  });
+  const [postId, setPostId] = useState<string | null>(null);
+  const [formData, setFormData] = useState(createDefaultPostFormData());
 
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
@@ -47,16 +45,7 @@ export default function EditPostPage(props: EditPostPageProps) {
         }
         
         const post = await res.json();
-        
-        setFormData({
-            title: post.title,
-            type: post.type,
-            sub_type: post.sub_type || "",
-            summary: post.summary || "",
-            contentJson: post.content || {},
-            contentHtml: "",
-            status: post.status,
-        });
+        setFormData(toPostFormData(post));
 
       } catch (error) {
         console.error(error);
@@ -85,19 +74,12 @@ export default function EditPostPage(props: EditPostPageProps) {
       const csrfToken = getCsrfToken();
       if (!csrfToken) {
         alert("Missing CSRF token. Please login.");
+        setIsSaving(false);
         router.push("/login");
         return;
       }
 
-      // Construct Payload
-      const payload = {
-        type: formData.type,
-        sub_type: formData.type === "article" ? formData.sub_type : "",
-        title: formData.title,
-        summary: formData.summary,
-        content: formData.contentJson, // Send JSON structure
-        status: formData.status,
-      };
+      const payload = buildUpdatePostPayload(formData);
 
       const res = await fetch(`/api/admin/posts/${postId}`, {
         method: "PUT",
@@ -166,9 +148,11 @@ export default function EditPostPage(props: EditPostPageProps) {
                 onChange={handleChange}
                 className="w-full px-4 py-2 border border-gray-200 rounded-md bg-white"
               >
-                <option value="article">Article</option>
-                <option value="plog">Plog</option>
-                <option value="project">Project</option>
+                {contentTypeOptions.map((typeOption) => (
+                  <option key={typeOption.value} value={typeOption.value}>
+                    {typeOption.label}
+                  </option>
+                ))}
               </select>
             </div>
 
@@ -183,8 +167,11 @@ export default function EditPostPage(props: EditPostPageProps) {
                   onChange={handleChange}
                   className="w-full px-4 py-2 border border-gray-200 rounded-md bg-white"
                 >
-                  <option value="tech">Tech Notes</option>
-                  <option value="life">Life</option>
+                  {articleSubTypeOptions.map((subTypeOption) => (
+                    <option key={subTypeOption.value} value={subTypeOption.value}>
+                      {subTypeOption.label}
+                    </option>
+                  ))}
                 </select>
               </div>
             )}

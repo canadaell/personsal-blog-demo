@@ -66,9 +66,9 @@ func (s *PostService) ListPublishedPosts(page, pageSize int, typeFilter, subType
 		return nil, 0, err
 	}
 
-	// Select specific fields for list view (exclude heavy 'content' and 'meta')
-	// Order by published_at DESC
+	// Select list-safe fields only (exclude heavy content/meta JSON blobs).
 	err := query.Order("published_at DESC").
+		Select("id", "type", "sub_type", "title", "summary", "cover_image", "status", "published_at", "created_at", "updated_at").
 		Offset((page - 1) * pageSize).
 		Limit(pageSize).
 		Find(&posts).Error
@@ -123,6 +123,7 @@ func (s *PostService) ListAllPosts(page, pageSize int) ([]model.Post, int64, err
 	}
 
 	err := query.Order("created_at DESC").
+		Select("id", "type", "sub_type", "title", "summary", "cover_image", "status", "published_at", "created_at", "updated_at").
 		Offset((page - 1) * pageSize).
 		Limit(pageSize).
 		Find(&posts).Error

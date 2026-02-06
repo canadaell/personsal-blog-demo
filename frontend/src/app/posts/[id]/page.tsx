@@ -2,6 +2,7 @@ import React from "react";
 import { MainLayout } from "@/components/layout/MainLayout";
 import TiptapViewer from "@/components/editor/TiptapViewer";
 import Link from "next/link";
+import { buildBackendURL } from "@/lib/server/backend";
 
 interface PostPageProps {
   params: Promise<{
@@ -11,9 +12,8 @@ interface PostPageProps {
 
 // Fetch single post
 async function getPost(id: string) {
-  console.log("Fetching post ID:", id); // Debug Log
   try {
-    const res = await fetch(`http://127.0.0.1:8080/posts/${id}`, {
+    const res = await fetch(buildBackendURL(`/posts/${id}`), {
       cache: "no-store",
     });
 

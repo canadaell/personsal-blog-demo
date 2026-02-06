@@ -1,6 +1,7 @@
 import React from "react";
 import { ArticleCard } from "@/components/ArticleCard";
 import { MainLayout } from "@/components/layout/MainLayout";
+import { buildBackendURL } from "@/lib/server/backend";
 
 // Define the shape of data from API
 interface Post {
@@ -26,7 +27,7 @@ async function getPosts(): Promise<Post[]> {
   // Prevent caching for now so you see updates immediately (for dev)
   // In production, you might want revalidate: 60 etc.
   try {
-    const res = await fetch("http://127.0.0.1:8080/posts", {
+    const res = await fetch(buildBackendURL("/posts"), {
       cache: "no-store", 
     });
 

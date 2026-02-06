@@ -5,32 +5,17 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import TiptapEditor from "@/components/editor/TiptapEditor";
 import { getCsrfToken } from "@/lib/auth-client";
-
-// Map UI Labels to DB Values
-const contentTypes = [
-  { label: "Article", value: "article" },
-  { label: "Plog", value: "plog" },
-  { label: "Project", value: "project" },
-];
-
-const articleSubTypes = [
-  { label: "Tech Notes", value: "tech" },
-  { label: "Life", value: "life" },
-  { label: "Essay", value: "essay" },
-];
+import {
+  articleSubTypeOptions,
+  buildCreatePostPayload,
+  contentTypeOptions,
+  createDefaultPostFormData,
+} from "@/lib/post-form";
 
 export default function CreatePost() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
-  const [formData, setFormData] = useState({
-    title: "",
-    type: "article",
-    sub_type: "tech", 
-    summary: "",
-    contentHtml: "<p></p>", // Just for editor preview
-    contentJson: {},        // Real data to send
-    status: "published",
-  });
+  const [formData, setFormData] = useState(createDefaultPostFormData());
 
   const handleChange = (
     e: React.ChangeEvent<
@@ -48,20 +33,13 @@ export default function CreatePost() {
     const csrfToken = getCsrfToken();
     if (!csrfToken) {
       alert("Missing CSRF token, please login again.");
+      setLoading(false);
       router.push("/login");
       return;
     }
 
     try {
-      const payload = {
-        title: formData.title,
-        type: formData.type,
-        sub_type: formData.type === "article" ? formData.sub_type : "", // Only article has subtype
-        summary: formData.summary,
-        status: formData.status,
-        content: formData.contentJson, // Send JSON structure
-        meta: {}, // Expand later if needed
-      };
+      const payload = buildCreatePostPayload(formData);
 
       const res = await fetch(`/api/admin/posts`, {
         method: "POST",
@@ -148,7 +126,7 @@ export default function CreatePost() {
                   onChange={handleChange}
                   className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-black focus:border-transparent outline-none transition-all bg-white"
                 >
-                  {contentTypes.map((type) => (
+                  {contentTypeOptions.map((type) => (
                     <option key={type.value} value={type.value}>
                       {type.label}
                     </option>
@@ -171,7 +149,7 @@ export default function CreatePost() {
                     onChange={handleChange}
                     className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-black focus:border-transparent outline-none transition-all bg-white"
                   >
-                    {articleSubTypes.map((sub) => (
+                    {articleSubTypeOptions.map((sub) => (
                       <option key={sub.value} value={sub.value}>
                         {sub.label}
                       </option>

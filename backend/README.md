@@ -93,7 +93,7 @@ To enable image uploads:
 | :--- | :--- | :--- | :--- |
 | `GET` | `/ping` | Health check | - |
 | `POST` | `/login` | Admin login | Body: `{username, password}` |
-| `GET` | `/posts` | List published posts | `page`, `pageSize`, `type` (article/plog/project), `sub_type` (tech/life) |
+| `GET` | `/posts` | List published posts | `page` (>=1), `pageSize` (1-50), `type` (article/plog/project), `sub_type` (tech/life) |
 | `GET` | `/posts/:id` | Get post details | - |
 
 ### Admin Endpoints (Protected)
@@ -103,7 +103,7 @@ To enable image uploads:
 | :--- | :--- | :--- | :--- |
 | `GET` | `/admin/check` | Verify auth token | - |
 | `GET` | `/admin/stats` | Dashboard statistics | - |
-| `GET` | `/admin/posts` | List all posts (drafts & published) | `page`, `pageSize` |
+| `GET` | `/admin/posts` | List all posts (drafts & published) | `page` (>=1), `pageSize` (1-100) |
 | `POST` | `/admin/posts` | Create new post | JSON Post Object |
 | `PUT` | `/admin/posts/:id` | Update existing post | JSON Post Object |
 | `DELETE` | `/admin/posts/:id` | Delete post | - |

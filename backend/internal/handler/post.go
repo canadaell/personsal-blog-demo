@@ -2,10 +2,18 @@ package handler
 
 import (
 	"net/http"
+	"strconv"
 
 	"github.com/canadaell/personsal-blog-demo/backend/internal/model"
 	"github.com/canadaell/personsal-blog-demo/backend/internal/service"
 	"github.com/gin-gonic/gin"
+)
+
+const (
+	defaultPublicPageSize = 10
+	defaultAdminPageSize  = 20
+	maxPublicPageSize     = 50
+	maxAdminPageSize      = 100
 )
 
 type PostHandler struct {
@@ -35,11 +43,12 @@ func (h *PostHandler) Create(c *gin.Context) {
 }
 
 func (h *PostHandler) List(c *gin.Context) {
-	page := 1
-	pageSize := 10
+	page, pageSize, err := parsePaginationParams(c, 1, defaultPublicPageSize, maxPublicPageSize)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
 
-	// Simple query params parsing (could be improved)
-	// For now, use defaults
 	typeFilter := c.Query("type")
 	subTypeFilter := c.Query("sub_type")
 
@@ -89,8 +98,11 @@ func (h *PostHandler) GetStats(c *gin.Context) {
 }
 
 func (h *PostHandler) AdminList(c *gin.Context) {
-	page := 1
-	pageSize := 20 // Admin might want to see more
+	page, pageSize, err := parsePaginationParams(c, 1, defaultAdminPageSize, maxAdminPageSize)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
 
 	posts, total, err := h.postService.ListAllPosts(page, pageSize)
 	if err != nil {
@@ -132,4 +144,46 @@ func (h *PostHandler) Delete(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{"message": "Post deleted successfully"})
+}
+
+func parsePaginationParams(c *gin.Context, defaultPage, defaultPageSize, maxPageSize int) (int, int, error) {
+	page := defaultPage
+	pageSize := defaultPageSize
+
+	if pageRaw := c.Query("page"); pageRaw != "" {
+		parsed, err := strconv.Atoi(pageRaw)
+		if err != nil || parsed < 1 {
+			return 0, 0, errPaginationInvalid("page")
+		}
+		page = parsed
+	}
+
+	if pageSizeRaw := c.Query("pageSize"); pageSizeRaw != "" {
+		parsed, err := strconv.Atoi(pageSizeRaw)
+		if err != nil || parsed < 1 {
+			return 0, 0, errPaginationInvalid("pageSize")
+		}
+		if parsed > maxPageSize {
+			return 0, 0, errPaginationTooLarge(maxPageSize)
+		}
+		pageSize = parsed
+	}
+
+	return page, pageSize, nil
+}
+
+func errPaginationInvalid(field string) error {
+	return &paginationError{message: field + " must be a positive integer"}
+}
+
+func errPaginationTooLarge(maxPageSize int) error {
+	return &paginationError{message: "pageSize must be <= " + strconv.Itoa(maxPageSize)}
+}
+
+type paginationError struct {
+	message string
+}
+
+func (e *paginationError) Error() string {
+	return e.message
 }

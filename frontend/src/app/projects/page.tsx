@@ -1,6 +1,7 @@
 import React from "react";
 import { ArticleCard } from "@/components/ArticleCard";
 import { MainLayout } from "@/components/layout/MainLayout";
+import { buildBackendURL } from "@/lib/server/backend";
 
 // Define the shape of data from API
 interface Post {
@@ -25,7 +26,7 @@ interface ApiResponse {
 async function getProjectPosts(): Promise<Post[]> {
   try {
     // Add type=project query param
-    const res = await fetch("http://127.0.0.1:8080/posts?type=project", {
+    const res = await fetch(buildBackendURL("/posts?type=project"), {
       cache: "no-store", 
     });
 
