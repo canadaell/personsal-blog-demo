@@ -3,7 +3,7 @@ import { readTokenFromCookies, validateCsrf } from "@/lib/server/auth";
 import { buildBackendURL } from "@/lib/server/backend";
 
 type Params = {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 };
 
 export async function GET(request: NextRequest, context: Params) {
@@ -12,7 +12,7 @@ export async function GET(request: NextRequest, context: Params) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const { id } = context.params;
+  const { id } = await context.params;
   const backendRes = await fetch(buildBackendURL(`/admin/posts/${id}`), {
     headers: {
       Authorization: `Bearer ${token}`,
@@ -33,7 +33,7 @@ export async function PUT(request: NextRequest, context: Params) {
     return NextResponse.json({ error: "Invalid CSRF token" }, { status: 403 });
   }
 
-  const { id } = context.params;
+  const { id } = await context.params;
   const body = await request.text();
   const backendRes = await fetch(buildBackendURL(`/admin/posts/${id}`), {
     method: "PUT",
@@ -58,7 +58,7 @@ export async function DELETE(request: NextRequest, context: Params) {
     return NextResponse.json({ error: "Invalid CSRF token" }, { status: 403 });
   }
 
-  const { id } = context.params;
+  const { id } = await context.params;
   const backendRes = await fetch(buildBackendURL(`/admin/posts/${id}`), {
     method: "DELETE",
     headers: {
