@@ -12,7 +12,9 @@ COPY . .
 # Build
 # Note: Ensure next.config.ts has output: 'standalone'
 ARG NEXT_PUBLIC_API_URL
+ARG BACKEND_API_URL
 ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
+ENV BACKEND_API_URL=$BACKEND_API_URL
 RUN npm run build
 
 # Runtime Stage
